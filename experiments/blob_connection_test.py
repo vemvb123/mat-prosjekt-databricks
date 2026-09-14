@@ -1,21 +1,28 @@
 from azure.storage.blob import BlobServiceClient
 
+from src.config import (
+    AZURE_BLOB_PREFIX,
+    AZURE_STORAGE_ACCOUNT_URL,
+    AZURE_STORAGE_CONTAINER,
+    AZURE_STORAGE_CREDENTIAL_NAME,
+)
+
 print("Getting Databricks service credential...")
 
 credential = dbutils.credentials.getServiceCredentialsProvider(
-    "customer_support_blob"
+    AZURE_STORAGE_CREDENTIAL_NAME
 )
 
 print("Connecting to Azure Blob Storage...")
 
 blob_service = BlobServiceClient(
-    account_url="https://customersupportsbase320.blob.core.windows.net",
+    account_url=AZURE_STORAGE_ACCOUNT_URL,
     credential=credential,
 )
 
 blob_client = blob_service.get_blob_client(
-    container="raw",
-    blob="customer_support/test.txt",
+    container=AZURE_STORAGE_CONTAINER,
+    blob=f"{AZURE_BLOB_PREFIX}/test.txt",
 )
 
 print("Uploading test file...")

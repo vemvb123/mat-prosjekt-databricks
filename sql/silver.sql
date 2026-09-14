@@ -34,6 +34,7 @@ SELECT
   CAST(saltAmount AS DOUBLE) AS salt_amount
 
 FROM hybrid_test.default.product_nutritiens_bronze
+-- The gold table needs complete nutrition values for its calculations.
 WHERE energyAmount IS NOT NULL
   AND caloriesAmount IS NOT NULL
   AND fatAmount IS NOT NULL

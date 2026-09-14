@@ -5,11 +5,12 @@
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.jobs import JobSettings as Job
 
-useremail = "xxx"
-warehouse_id = "xxx"
+from src.config import USER_EMAIL, WAREHOUSE_ID
 
-repo_path = f"/Workspace/Users/{useremail}/mat-prosjekt-databricks"
+# Databricks workspace path where this repository is expected to be checked out.
+repo_path = f"/Workspace/Users/{USER_EMAIL}/mat-prosjekt-databricks"
 
+# Jobben kjører hele dataflyten fra scraping til ferdig gold-tabell.
 Weekly_Scrape_Job = Job.from_dict(
     {
         "name": "Weekly Scrape Job",
@@ -20,6 +21,7 @@ Weekly_Scrape_Job = Job.from_dict(
         },
         "tasks": [
             {
+                # First task: scrape products from the store APIs and save raw JSON.
                 "task_key": "scrape",
                 "spark_python_task": {
                     "python_file": f"{repo_path}/src/scrape.py",
@@ -27,6 +29,7 @@ Weekly_Scrape_Job = Job.from_dict(
                 "environment_key": "Default",
             },
             {
+                # Second task: turn the chosen JSON file into the products Delta table.
                 "task_key": "scraped_json_to_sql_table",
                 "depends_on": [
                     {
@@ -39,6 +42,7 @@ Weekly_Scrape_Job = Job.from_dict(
                 "environment_key": "Default",
             },
             {
+                # SQL layers build progressively cleaner tables: bronze, silver, then gold.
                 "task_key": "bronze",
                 "depends_on": [
                     {
@@ -50,7 +54,7 @@ Weekly_Scrape_Job = Job.from_dict(
                         "path": f"{repo_path}/sql/bronze.sql",
                         "source": "WORKSPACE",
                     },
-                    "warehouse_id": warehouse_id,
+                    "warehouse_id": WAREHOUSE_ID,
                 },
             },
             {
@@ -65,7 +69,7 @@ Weekly_Scrape_Job = Job.from_dict(
                         "path": f"{repo_path}/sql/silver.sql",
                         "source": "WORKSPACE",
                     },
-                    "warehouse_id": warehouse_id,
+                    "warehouse_id": WAREHOUSE_ID,
                 },
             },
             {
@@ -80,7 +84,7 @@ Weekly_Scrape_Job = Job.from_dict(
                         "path": f"{repo_path}/sql/gold.sql",
                         "source": "WORKSPACE",
                     },
-                    "warehouse_id": warehouse_id,
+                    "warehouse_id": WAREHOUSE_ID,
                 },
             },
         ],

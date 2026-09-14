@@ -1,7 +1,7 @@
 /*
-Makes an SQL table for silver, from a bronze table
-..
-Differs from the bronze table by:
+Makes an SQL table for gold, from a silver table.
+
+Differs from the silver table by:
 - Adding the first part of the link, for website/image links
 - Changing brand values to 'Ikke spesifisert' hvis verdien er null
 - Changing description values to 'Ingen beskrivelse' hvis verdien er null
@@ -50,6 +50,7 @@ SELECT
   protein_amount,
   salt_amount,
 
+  -- Nutrition values are stored per 100 g/ml, so multiplying by 10 gives per kg/l.
   energy_amount * 10 AS energy_per_package,
   calories_amount * 10 AS calories_per_package,
   fat_amount * 10 AS fat_per_package,
@@ -59,6 +60,7 @@ SELECT
   protein_amount * 10 AS protein_per_package,
   salt_amount * 10 AS salt_per_package,
 
+  -- Nutritional value per NOK makes products easier to compare by price.
   ROUND((energy_amount * 10) / compare_price_per_unit, 2) AS energy_per_nok,
   ROUND((calories_amount * 10) / compare_price_per_unit, 2) AS calories_per_nok,
   ROUND((fat_amount * 10) / compare_price_per_unit, 2) AS fat_per_nok,

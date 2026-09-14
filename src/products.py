@@ -4,24 +4,26 @@ import pandas as pd
 from azure.storage.blob import BlobServiceClient
 from pyspark.sql import functions as F
 
+from config import (
+    AZURE_STORAGE_ACCOUNT_URL,
+    AZURE_STORAGE_CONTAINER,
+    AZURE_STORAGE_CREDENTIAL_NAME,
+    PRODUCTS_BLOB_NAME,
+)
+
 # ============================================================
-# Converts the json to a sql table, to be 
+# Converts scraped product JSON from Azure Blob Storage into
+# a simple Delta table that can be processed by the SQL layers.
 # ============================================================
 
 # ============================================================
 # 1. SETTINGS
 # ============================================================
 
-STORAGE_ACCOUNT_URL = (
-    "https://customersupportsbase320.blob.core.windows.net"
-)
-
-CONTAINER = "raw"
-
-BLOB_NAME = (
-    "customer_support/"
-    "weekly_data_20260820T233905Z.json"
-)
+# Values come from .env through config.py, so the blob can change without code edits.
+STORAGE_ACCOUNT_URL = AZURE_STORAGE_ACCOUNT_URL
+CONTAINER = AZURE_STORAGE_CONTAINER
+BLOB_NAME = PRODUCTS_BLOB_NAME
 
 
 # ============================================================
@@ -29,7 +31,7 @@ BLOB_NAME = (
 # ============================================================
 
 credential = dbutils.credentials.getServiceCredentialsProvider(
-    "customer_support_blob"
+    AZURE_STORAGE_CREDENTIAL_NAME
 )
 
 blob_service = BlobServiceClient(
@@ -49,6 +51,7 @@ blob_client = blob_service.get_blob_client(
 
 print("Downloading JSON...")
 
+# Download the selected scrape file as bytes before parsing it as JSON.
 json_bytes = blob_client.download_blob().readall()
 
 data = json.loads(json_bytes)
@@ -61,6 +64,7 @@ print("Top-level keys:", data.keys())
 # 4. GET PRODUCTS
 # ============================================================
 
+# Each chain has its own product list in the scraped JSON file.
 spar_products = data["spar"]["products"]
 meny_products = data["meny"]["products"]
 
@@ -76,6 +80,7 @@ print("MENY products:", len(meny_products))
 
 rows = []
 
+# Store every SPAR product as raw JSON, but tag the row with the source chain.
 for product in spar_products:
     rows.append(
         {
@@ -87,6 +92,7 @@ for product in spar_products:
         }
     )
 
+# Store every MENY product in the same shape as SPAR products.
 for product in meny_products:
     rows.append(
         {
@@ -108,8 +114,10 @@ for product in meny_products:
 
 pdf = pd.DataFrame(rows)
 
+# Convert the small pandas DataFrame to Spark before writing a Delta table.
 products_raw_df = spark.createDataFrame(pdf)
 
+# The SQL pipeline starts from this table.
 products_raw_df.write \
     .format("delta") \
     .mode("overwrite") \

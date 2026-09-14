@@ -1,5 +1,6 @@
 /*
-Makes an SQL table for bronze, from a products table. The products table is made directly from a json file in the blob
+Makes a bronze SQL table from the products table.
+The products table contains one row per product, with the full source product stored as JSON text.
 */
 
 CREATE OR REPLACE TABLE product_nutritiens_bronze AS
@@ -45,5 +46,6 @@ SELECT
   get_json_object(product_json, '$.nutritionalContent[7].unit') AS saltUnit
 
 FROM products
+-- Keep only products with a comparable kilo/liter price.
 WHERE CAST(get_json_object(product_json, '$.comparePricePerUnit') AS STRING) > '0'
   AND get_json_object(product_json, '$.compareUnit') IN ('kg', 'l');
