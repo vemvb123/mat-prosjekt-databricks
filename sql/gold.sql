@@ -1,6 +1,6 @@
 /*
 Makes an SQL table for silver, from a bronze table
-
+..
 Differs from the bronze table by:
 - Adding the first part of the link, for website/image links
 - Changing brand values to 'Ikke spesifisert' hvis verdien er null
