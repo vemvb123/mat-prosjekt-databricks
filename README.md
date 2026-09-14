@@ -4,6 +4,10 @@ Dette prosjektet henter matvaredata fra norske matbutikker og lager tabeller som
 
 Prosjektet er laget for Databricks. Data hentes fra butikk-API-er, lagres som JSON i Azure Blob Storage, leses inn i Databricks og bygges videre til Delta-tabeller i bronze-, silver- og gold-lag.
 
+Dataen blir presentert på en nettside.
+Koden for nettsiden finnes her:
+https://github.com/vemvb123/mat_prosjekt
+
 ## Hva prosjektet gjør
 
 1. Henter produkter fra SPAR og MENY.
